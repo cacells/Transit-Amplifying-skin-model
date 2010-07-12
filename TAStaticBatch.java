@@ -22,6 +22,8 @@ public class TAStaticBatch {
 	
 	int replicates =20; // 20 replicates for each experiment
 	
+	static String fileprefix = "test";
+	
     public double getMean(double sum) {
 		 return sum / replicates;
 	}
@@ -37,7 +39,7 @@ public class TAStaticBatch {
 
 
 	public void iterate(int exp, int rep){
-		double frac = (double)((exp+1)/100.0); // caculate raction of SC
+		double frac = (double)((exp+1)/100.0); // calculate fraction of SC
 		double  avProliferations;
 		double avTypes;
 		double avTypeProliferations;
@@ -48,18 +50,21 @@ public class TAStaticBatch {
 		double [] stains = new double[7];
 		TAGridStatic experiment = new TAGridStatic(64, 4, frac);
 		for(int i=0; i<100; i++){
-			if(i==89)experiment.stain();// stain all cells 10 iterations beore end
+			if(i==89)experiment.stain();// stain all cells 10 iterations before end
 			experiment.iterate();
 		}
+		//now, after 100 iterations:
 		for (TACell c : experiment.tissue){
 			types[c.type]++; // count types
 			stains[c.type]+=c.stain; // calculate stain
 		}
+		//beth? another iteration?
 		experiment.iterate();
 		for (TACell c : experiment.tissue){
 			if(c.proliferated){
-				// count prolierations in final iteration
+				// count proliferations in final iteration
 				proliferations++;
+				//beth? why are the type 3 counted with the type 2?
 				if(c.type<3){
 					typeProliferations[c.type]++;// count the type as it was in the iteration before the final iteration
 				}else{
@@ -90,7 +95,7 @@ public class TAStaticBatch {
 		}
 	}
 	
-	public void setOfRuns(String file){
+	public void setOfRuns(){
 		for(int i=0; i<50; i++){// 50 sets of  experiments
 			System.out.print(i);
 			for(int r=0; r<replicates; r++){
@@ -99,18 +104,18 @@ public class TAStaticBatch {
 			}
 			System.out.println();
 		}
-		outputData(file);
+		outputData();
 	}
 	
 		
-	public void outputData(String file){
+	public void outputData(){
 		// Loop through all of the array of experiments and print them out 
 		try{
 			//creates the data files for the experiments
-			BufferedWriter bufProlif = new BufferedWriter(new FileWriter(file+"Proliferation.txt"));
-			BufferedWriter bufTypes = new BufferedWriter(new FileWriter(file+"Types.txt"));
-			BufferedWriter bufTypeProlif = new BufferedWriter(new FileWriter(file+"TypeProliferation.txt"));
-			BufferedWriter bufStain = new BufferedWriter(new FileWriter(file+"StainProliferation.txt"));
+			BufferedWriter bufProlif = new BufferedWriter(new FileWriter(fileprefix+"Proliferation.txt"));
+			BufferedWriter bufTypes = new BufferedWriter(new FileWriter(fileprefix+"Types.txt"));
+			BufferedWriter bufTypeProlif = new BufferedWriter(new FileWriter(fileprefix+"TypeProliferation.txt"));
+			BufferedWriter bufStain = new BufferedWriter(new FileWriter(fileprefix+"StainProliferation.txt"));
 			String[] headers = {"Space","SC","TA1","TA2","TA3","TA4","TA5"};
 			double frac=0.0;
 			bufProlif.write("SCFraction Av_proliferations stdev");
@@ -157,7 +162,10 @@ public class TAStaticBatch {
 	
 	public static void main (String args[]) {		
 		TAStaticBatch t = new TAStaticBatch();
-		// the agument is the directory and the first part of the data name
-		t.setOfRuns(args[0]);
+		// the argument is the directory and the first part of the data name
+		if(args.length>0){
+			fileprefix = args[0];
+		}
+		t.setOfRuns();
 	}
 }

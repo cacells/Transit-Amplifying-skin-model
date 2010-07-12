@@ -7,6 +7,7 @@
 
 
 import java.awt.*;
+
 import javax.swing.*;
 import java.util.*;
  
@@ -22,6 +23,12 @@ public class TAStatic extends JFrame implements Runnable {
 	int scale = 20;//beth: could set to 1. Makes the colour transitions better?
 	int iterations;
 	int gSize;
+    Colour palette = new Colour();
+	int[] colorindices = {45,1,5,4,2,54};//{0,1,2,54,4,5};
+	int nnw = colorindices.length-1;
+//    Color[] colours = {Color.white,Color.black,Color.green,Color.blue,Color.yellow,Color.red,Color.pink};
+    Color[] javaColours;
+    double[][] epsColours;
     Color[] colours = {Color.black,Color.white,Color.green,Color.blue,Color.yellow,Color.red,Color.pink};
 
 	public TAStatic(int size, int maxC, double frac) {
@@ -35,20 +42,21 @@ public class TAStatic extends JFrame implements Runnable {
 		backImg2 = createImage(scale * size, scale * size);
 		backGr2 = backImg2.getGraphics();
 		iterations = 0;
+		setpalette();
 	}
 
 	public void drawCA() {
 		backGr1.setColor(Color.white);
 		int a;
-		backGr1.fillRect(0, 0, this.getSize().width, this.getSize().height);
+		backGr1.fillOval(0, 0, this.getSize().width, this.getSize().height);
 		for (TACell c : experiment.tissue){
 			a = c.type;
 			if(a<7){
-				backGr1.setColor(colours[a]);
+				backGr1.setColor(javaColours[a]);
 			}else{
 				backGr1.setColor(Color.orange);
 			}
-			backGr1.fillRect(c.home.x * scale, c.home.y * scale, scale, scale);
+			backGr1.fillOval(c.home.x * scale, c.home.y * scale, scale, scale);
 		}
         backGr2.drawImage(backImg1, 0, 0, gSize * scale, gSize * scale, 0, 0, scale * gSize, scale * gSize, this);
 	    repaint();//beth: calls for a screen repaint asap
@@ -72,7 +80,7 @@ public class TAStatic extends JFrame implements Runnable {
 
 
 	public void run() {
-    	while (iterations < 5) {
+    	while (iterations < 100) {
         	//while (runner == Thread.currentThread()) {
 			experiment.iterate();
 			drawCA();
@@ -131,7 +139,16 @@ public class TAStatic extends JFrame implements Runnable {
 			System.out.println(e.toString());
 		}
 	}
-
+    public void setpalette(){
+    	int ind = colorindices.length;
+    	javaColours = new Color[ind];
+    	epsColours = new double[ind][3];
+    	for (int i=0;i<ind;i++){
+    		//System.out.println("color index "+colorindices[i]);
+    		javaColours[i] = palette.chooseJavaColour(colorindices[i]);
+    		epsColours[i] = palette.chooseEPSColour(colorindices[i]);
+    	}
+    }
 
 	public static void main(String args[]) {
 		double initalSeed = 0.1;
@@ -140,7 +157,7 @@ public class TAStatic extends JFrame implements Runnable {
 			TAStatic s = new TAStatic(64, 4, initalSeed);
 			s.start();
 		}else{
-			TAStatic s = new TAStatic(64, 4, 0.00);
+			TAStatic s = new TAStatic(64, 4, 0.10);
 			s.start();
 		}
 	}
