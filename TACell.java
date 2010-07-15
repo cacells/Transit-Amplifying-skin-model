@@ -33,7 +33,7 @@ class TACell{
 		proliferated = false;
 	}
 	
-	public void growth(TACell cHold){ // Growth occurs into cell
+	public void growth(TACell cHold){ // Growth occurs into cell. chold is the neighbour that is taking over
 			type=cHold.type+1; // Takes on type+1 of cell that is proliferating if SC type = 1+1 if TA_3 type = 3+1 
 			if(cHold.type>1)cHold.type++; // If proliferating cell is not an SC it to increases its type
 			canGrow=false;// New cell will not proliferate again in this iteration

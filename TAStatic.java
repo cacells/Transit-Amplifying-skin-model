@@ -7,8 +7,13 @@
 
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+
 import java.util.*;
  
 public class TAStatic extends JFrame implements Runnable {
@@ -16,11 +21,15 @@ public class TAStatic extends JFrame implements Runnable {
     TAGridStatic experiment;
     Random rand = new Random();    
 	Thread runner;
+    Container mainWindow;
+	CAImagePanel CApicture;
 	Image backImg1;
 	Graphics backGr1;
 	Image backImg2;
 	Graphics backGr2;
+	JProgressBar progressBar;
 	int scale = 20;//beth: could set to 1. Makes the colour transitions better?
+	int border = 20;
 	int iterations;
 	int gSize;
     Colour palette = new Colour();
@@ -30,25 +39,68 @@ public class TAStatic extends JFrame implements Runnable {
     Color[] javaColours;
     double[][] epsColours;
     Color[] colours = {Color.black,Color.white,Color.green,Color.blue,Color.yellow,Color.red,Color.pink};
+    boolean writeImages = false;
+    int maxIters = 100;
 
 	public TAStatic(int size, int maxC, double frac) {
 	    gSize=size;
 		experiment = new TAGridStatic(size, maxC, frac);
-		setSize(400, 400);//window (Frame) size
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//setSize(400, 500);//window (Frame) size
+		//setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true);
 		backImg1 = createImage(scale * size, scale * size);
 		backGr1 = backImg1.getGraphics();
 		backImg2 = createImage(scale * size, scale * size);
 		backGr2 = backImg2.getGraphics();
-		iterations = 0;
 		setpalette();
+		
+	    int wscale = 6;//scale for main panel
+	    int btnHeight = 480-384;//found by trial and error - must be a better way!
+	    //although no buttons yet
+	    int wh = (gSize*1)*wscale + 2*border;// +btnHeight;//mainWindow height
+	    int ww = (gSize*2)*wscale + 3*border;//mainWindow width   
+	    
+		mainWindow = getContentPane();
+		mainWindow.setLayout(new BorderLayout());
+		setSize(ww,wh);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setVisible(true);
+        CApicture = new CAImagePanel(ww,wh);
+        CApicture.setBorder(border);
+        CApicture.rowstoShow = gSize;
+        mainWindow.add(CApicture,BorderLayout.CENTER);
+		setVisible(true);
+	    progressBar = new JProgressBar(0,maxIters);
+	    progressBar.setValue(25);
+	    progressBar.setStringPainted(true);
+	    mainWindow.add(progressBar, BorderLayout.SOUTH);
+		setVisible(true);
+		
 	}
-
+	//new ones
 	public void drawCA() {
+		int a;
+		for (TACell c : experiment.tissue){
+			a = c.type;
+			CApicture.drawCircleAt(c.home.x, c.home.y, javaColours[a], 1);
+		}
+	    CApicture.updateGraphic();
+	}
+	public void drawCAstain() {
+		double cstain;
+		for (TACell c : experiment.tissue){
+			//if ((c.stain < minstain) && (c.type>0)) minstain = c.stain;
+			cstain = c.stain;
+			CApicture.drawCircleAt(c.home.x, c.home.y, palette.Javashades(cstain), 2);
+		}
+	    //outputImage();
+	    CApicture.updateGraphic();
+	}
+	//old ones
+	public void olddrawCA() {
 		backGr1.setColor(Color.white);
 		int a;
-		backGr1.fillOval(0, 0, this.getSize().width, this.getSize().height);
+		backGr1.fillRect(0, 0, scale*gSize, scale*gSize);
 		for (TACell c : experiment.tissue){
 			a = c.type;
 			if(a<7){
@@ -61,17 +113,44 @@ public class TAStatic extends JFrame implements Runnable {
         backGr2.drawImage(backImg1, 0, 0, gSize * scale, gSize * scale, 0, 0, scale * gSize, scale * gSize, this);
 	    repaint();//beth: calls for a screen repaint asap
 	}
-
-
-
-	public void paint(Graphics g) {
-		if ((backImg2 != null) && (g != null)) {
-			g.drawImage(backImg2, 0, 0, this.getSize().width, this.getSize().height, -10, -92, scale * gSize + 10, scale * gSize + 10, this);
-			//g.drawImage(backImg2, 0, scale+10, this.getSize().width, scale*2, -10, 0, scale * gSize + 10, scale,this);
+	public void olddrawCAstain() {
+		backGr1.setColor(Color.white);
+		double cstain;
+		backGr1.fillRect(0, 0, scale*gSize, scale*gSize);
+		//double minstain = 1.0;
+		for (TACell c : experiment.tissue){
+			//if ((c.stain < minstain) && (c.type>0)) minstain = c.stain;
+			cstain = c.stain;
+			backGr1.setColor(palette.Javashades(cstain));
+			backGr1.fillOval(c.home.x * scale, c.home.y * scale, scale, scale);
 		}
+		//System.out.println("min stain: "+minstain);
+        backGr2.drawImage(backImg1, 0, 0, gSize * scale, gSize * scale, 0, 0, scale * gSize, scale * gSize, this);
+	    //outputImage();
+        repaint();//beth: calls for a screen repaint asap
 	}
 
+
+
+/*	public void paint(Graphics g) {
+		if ((backImg2 != null) && (g != null)) {
+			g.drawImage(backImg2, 0, 100, 400,500,0,0,scale*gSize,scale*gSize,Color.white,this);
+			//g.drawImage(backImg2, 0, 0, this.getSize().width, this.getSize().height, -10, -92, scale * gSize + 10, scale * gSize + 10, this);
+			//g.drawImage(backImg2, 0, scale+10, this.getSize().width, scale*2, -10, 0, scale * gSize + 10, scale,this);
+		}
+	}*/
+
+	public void initialise(){
+			CApicture.setScale(gSize,gSize,scale,gSize,gSize,scale);
+      	    CApicture.clearCAPanel(1);
+      	    CApicture.clearCAPanel(2);
+      	    CApicture.clearParent();
+		    iterations=0;
+	}
+	
+	
 	public void start() {
+		initialise();
 		if (runner == null) {
 			runner = new Thread(this);
 		}
@@ -80,13 +159,23 @@ public class TAStatic extends JFrame implements Runnable {
 
 
 	public void run() {
-    	while (iterations < 100) {
-        	//while (runner == Thread.currentThread()) {
+		while (iterations < maxIters) {
+		    progressBar.setValue(iterations);
+			if (runner == Thread.currentThread()) {
 			experiment.iterate();
+			//if (iterations < 89) drawCA();
+			//else 
+			if (iterations == 0) experiment.stain();
+			if (iterations%2==0){
 			drawCA();
+			drawCAstain();
+
+			if (writeImages) CApicture.writeImage(iterations);
+			}
 			iterations++;
 			//if((iterations%5)==0)postscriptPrint("TA"+iterations+".eps");
 			// This will produce a postscript output of the tissue
+			}
 		}
 	}
 

@@ -116,6 +116,23 @@ public Color chooseJavaColour(int index){
 	//System.out.println(r+" "+g+" "+b);
 	return chosen;
 }
+public Color Javagrey(double stain){
+	Color chosen = null;
+	int grey;
+	grey = (int)(255.0*(1.0-stain));
+	chosen = new Color(grey,grey,grey);
+	//System.out.println(r+" "+g+" "+b);
+	return chosen;
+}
+public Color Javashades(double stain){
+	Color chosen = null;
+	int grey;
+	grey = (int)(255.0*(1.0-stain));
+	//chosen = new Color(grey,grey,grey);
+	chosen = new Color(chosen.HSBtoRGB((float) (194.0/360.0), (float) stain,(float) (1.0-stain/2.0)));
+	//System.out.println(r+" "+g+" "+b);
+	return chosen;
+}
 
 public double[] chooseEPSColour(int index){
 	double[] chosen = {vals[index][0],vals[index][1],vals[index][2]};
